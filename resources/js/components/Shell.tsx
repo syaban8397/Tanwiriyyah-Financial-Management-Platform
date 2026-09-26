@@ -6,14 +6,15 @@ export default function AppShell({ title, children }: { title: string; children:
     const { auth, navigation, unit_options, context_unit_id, notifications, flash } = usePage<SharedProps>().props;
     const url = usePage().url;
     const [open, setOpen] = useState(false);
-    const [collapsed, setCollapsed] = useState(() => window.localStorage.getItem('tw-sidebar') === 'collapsed');
+    const [closed, setClosed] = useState(() => window.localStorage.getItem('tw-sidebar') === 'closed');
     const cursor = useMemo(() => ({ current: Number(window.sessionStorage.getItem('tw-event') || 0) }), []);
     const [palette, setPalette] = useState(false);
     const [help, setHelp] = useState(false);
-    const [profile, setProfile] = useState(false);
     const [notes, setNotes] = useState(false);
+    const [calendar, setCalendar] = useState(false);
     const [toast, setToast] = useState<string | null>(null);
     const path = url.split('?')[0];
+    const todayLabel = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date());
 
     useEffect(() => {
         if (flash?.success) setToast(flash.success);
@@ -35,6 +36,8 @@ export default function AppShell({ title, children }: { title: string; children:
             if (event.key === 'Escape') {
                 setPalette(false);
                 setHelp(false);
+                setNotes(false);
+                setCalendar(false);
             }
         };
         window.addEventListener('keydown', onKey);
@@ -75,24 +78,32 @@ export default function AppShell({ title, children }: { title: string; children:
     }, []);
 
     const user = auth?.user;
+    const toggleSidebar = () => {
+        if (window.matchMedia('(max-width: 960px)').matches) {
+            setOpen((value) => !value);
+            return;
+        }
+        setClosed((value) => {
+            const next = !value;
+            window.localStorage.setItem('tw-sidebar', next ? 'closed' : 'open');
+            return next;
+        });
+    };
 
     return (
         <>
             <Head title={title} />
-            <div className={collapsed ? 'shell is-collapsed' : 'shell'}>
+            <div className={closed ? 'shell is-closed' : 'shell'}>
                 {open && <button className="scrim" type="button" aria-label="Tutup menu" onClick={() => setOpen(false)} />}
                 <aside className={open ? 'sidebar open' : 'sidebar'}>
                     <div className="brand">
-                        <b>TANWIRIYYAH</b>
-                        <span>Keuangan yayasan</span>
-                        <i />
-                        <button className="btn btn-quiet collapse-toggle" type="button" onClick={() => setCollapsed((value) => {
-                            const next = !value;
-                            window.localStorage.setItem('tw-sidebar', next ? 'collapsed' : 'open');
-                            return next;
-                        })}>
-                            {collapsed ? 'Lebarkan' : 'Ciutkan'}
-                        </button>
+                        <div className="brand-lockup">
+                            <img className="brand-logo" src="/brand/tanwiriyyah-logo.jpg" alt="" />
+                            <div>
+                                <b>TANWIRIYYAH</b>
+                                <span>Yayasan</span>
+                            </div>
+                        </div>
                     </div>
                     <nav className="nav" aria-label="Utama">
                         {navigation.map((group) => (
@@ -105,6 +116,7 @@ export default function AppShell({ title, children }: { title: string; children:
                                         className={path === item.href || path.startsWith(item.href + '/') ? 'active' : ''}
                                         onClick={() => setOpen(false)}
                                     >
+                                        <span className="nav-glyph" aria-hidden="true">{item.label.slice(0, 1)}</span>
                                         <span className="nav-text">{item.label}</span>
                                         {!!item.badge && <span className="badge">{item.badge}</span>}
                                     </Link>
@@ -115,60 +127,71 @@ export default function AppShell({ title, children }: { title: string; children:
                 </aside>
                 <div className="workspace">
                     <header className="topbar">
-                        <button className="btn mobile-only" type="button" onClick={() => setOpen((value) => !value)} aria-label="Menu">
-                            Menu
+                        <button className="icon-btn menu-toggle" type="button" aria-expanded={open || !closed} aria-label="Buka atau tutup menu" onClick={toggleSidebar}>
+                            <MenuLines />
                         </button>
+                        <div className="topbar-brand">
+                            <img className="brand-logo" src="/brand/tanwiriyyah-logo.jpg" alt="" />
+                            <span>TANWIRIYYAH</span>
+                        </div>
                         <button className="search-btn" type="button" onClick={() => setPalette(true)}>
                             <span>Cari transaksi, unit, akun…</span>
                             <span className="kbd">Ctrl K</span>
                         </button>
-                        {user?.unit_id === null && (
-                            <form
-                                onChange={(event) => {
-                                    const data = new FormData(event.currentTarget);
-                                    router.post('/context/unit', { unit_id: data.get('unit_id') }, { preserveScroll: true });
-                                }}
-                            >
-                                <label className="sr-only" htmlFor="unit-context">Unit</label>
-                                <select id="unit-context" name="unit_id" defaultValue={context_unit_id ?? 'all'} aria-label="Konteks unit">
-                                    <option value="all">Semua unit</option>
-                                    {unit_options.map((unit) => (
-                                        <option key={unit.id} value={unit.id}>{unit.code}</option>
-                                    ))}
-                                </select>
-                            </form>
-                        )}
-                        {user?.unit && <span className="text-sm" style={{ color: 'var(--color-muted)' }}>{user.unit.code}</span>}
-                        <button className="btn btn-quiet" type="button" onClick={() => setNotes((value) => !value)} aria-label="Notifikasi">
-                            Notifikasi{notifications.unread > 0 ? ` (${notifications.unread})` : ''}
-                        </button>
-                        <button className="btn btn-quiet" type="button" onClick={() => setHelp(true)}>Bantuan</button>
-                        <div className="menu">
-                            <button className="btn" type="button" onClick={() => setProfile((value) => !value)}>
-                                {user?.name}
-                            </button>
-                            {profile && (
-                                <div className="menu-pop">
-                                    <div style={{ padding: '8px 10px', color: 'var(--color-muted)', fontSize: 12 }}>{user?.role}</div>
-                                    <Link href="/logout" method="post" as="button">Keluar</Link>
-                                </div>
+                        <div className="topbar-end">
+                            {user?.unit_id === null && (
+                                <form
+                                    onChange={(event) => {
+                                        const data = new FormData(event.currentTarget);
+                                        router.post('/context/unit', { unit_id: data.get('unit_id') }, { preserveScroll: true });
+                                    }}
+                                >
+                                    <label className="sr-only" htmlFor="unit-context">Unit</label>
+                                    <select id="unit-context" name="unit_id" defaultValue={context_unit_id ?? 'all'} aria-label="Konteks unit">
+                                        <option value="all">Semua unit</option>
+                                        {unit_options.map((unit) => (
+                                            <option key={unit.id} value={unit.id}>{unit.code}</option>
+                                        ))}
+                                    </select>
+                                </form>
                             )}
+                            {user?.unit && <span className="unit-pill">{user.unit.code}</span>}
+                            <div className="menu">
+                                <button className="date-btn" type="button" aria-expanded={calendar} onClick={() => { setCalendar((value) => !value); setNotes(false); }}>
+                                    <CalendarIcon />
+                                    <span>{todayLabel}</span>
+                                </button>
+                                {calendar && <CalendarPop />}
+                            </div>
+                            <div className="menu">
+                                <button className="icon-btn" type="button" aria-label="Notifikasi" aria-expanded={notes} onClick={() => { setNotes((value) => !value); setCalendar(false); }}>
+                                    <Bell />
+                                    {notifications.unread > 0 && <span className="badge">{notifications.unread}</span>}
+                                </button>
+                                {notes && (
+                                    <div className="menu-pop notes-pop">
+                                        <div className="notes-head">
+                                            <strong>Notifikasi</strong>
+                                            <Link href="/notifications" onClick={() => setNotes(false)}>Semua</Link>
+                                        </div>
+                                        {notifications.preview.length === 0 && <p className="help">Tidak ada notifikasi.</p>}
+                                        {notifications.preview.map((item) => (
+                                            <Link key={item.id} href={`/notifications/${item.id}/read`} method="post" as="button" className={item.read ? 'note read' : 'note'} onClick={() => setNotes(false)}>
+                                                <strong>{item.title}</strong>
+                                                <span>{item.body}</span>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            <button className="btn btn-quiet" type="button" onClick={() => setHelp(true)}>Bantuan</button>
+                            <div className="who">
+                                <strong>{user?.name}</strong>
+                                <span>{user?.role}</span>
+                            </div>
+                            <Link className="btn top-logout" href="/logout" method="post" as="button">Keluar</Link>
                         </div>
                     </header>
-                    {notes && (
-                        <div className="panel" style={{ margin: '0 20px', position: 'absolute', right: 20, top: 56, width: 320, zIndex: 30 }}>
-                            <div className="panel-h"><h2>Notifikasi</h2><Link href="/notifications">Semua</Link></div>
-                            <div className="panel-b">
-                                {notifications.preview.length === 0 && <p className="help">Tidak ada notifikasi.</p>}
-                                {notifications.preview.map((item) => (
-                                    <Link key={item.id} href={`/notifications/${item.id}/read`} method="post" as="button" className="hit" style={{ display: 'block', textAlign: 'left', width: '100%', background: 'transparent', border: 0, padding: '8px 0', cursor: 'pointer' }}>
-                                        <strong>{item.title}</strong>
-                                        <div className="help">{item.body}</div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                     <main className="content">{children}</main>
                 </div>
             </div>
@@ -176,6 +199,64 @@ export default function AppShell({ title, children }: { title: string; children:
             {help && <HelpDrawer role={user?.role ?? ''} onClose={() => setHelp(false)} />}
             {toast && <div className="toast" role="status">{toast}</div>}
         </>
+    );
+}
+
+function CalendarPop() {
+    const [cursor, setCursor] = useState(() => new Date());
+    const year = cursor.getFullYear();
+    const month = cursor.getMonth();
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+    const count = new Date(year, month + 1, 0).getDate();
+    const cells: Array<number | null> = [
+        ...Array.from({ length: firstWeekday }, () => null),
+        ...Array.from({ length: count }, (_, index) => index + 1),
+    ];
+    const raw = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(cursor);
+    const label = raw.charAt(0).toUpperCase() + raw.slice(1);
+    const today = new Date();
+
+    return (
+        <div className="calendar-pop" role="dialog" aria-label="Kalender">
+            <div className="calendar-head">
+                <button type="button" aria-label="Bulan sebelumnya" onClick={() => setCursor(new Date(year, month - 1, 1))}>‹</button>
+                <strong>{label}</strong>
+                <button type="button" aria-label="Bulan berikutnya" onClick={() => setCursor(new Date(year, month + 1, 1))}>›</button>
+            </div>
+            <div className="calendar-grid">
+                {['Sn', 'Sl', 'Rb', 'Km', 'Jm', 'Sb', 'Mg'].map((day) => <span key={day} className="dow">{day}</span>)}
+                {cells.map((day, index) => {
+                    const current = day !== null && day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                    return <span key={index} className={current ? 'day today' : 'day'}>{day ?? ''}</span>;
+                })}
+            </div>
+        </div>
+    );
+}
+
+function Bell() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 9a6 6 0 1 1 12 0c0 7 2 7 2 7H4s2 0 2-7Z" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
+    );
+}
+
+function CalendarIcon() {
+    return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3.5" y="5" width="17" height="15" rx="2" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M3.5 10h17M8 3.5V7M16 3.5V7" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
+    );
+}
+
+function MenuLines() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 19h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
     );
 }
 

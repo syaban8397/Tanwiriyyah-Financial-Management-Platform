@@ -11,8 +11,12 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
             fonts: [
-                bunny('Instrument Sans', {
+                bunny('Manrope', {
                     weights: [400, 500, 600, 700],
+                    optimizedFallbacks: false,
+                }),
+                bunny('Newsreader', {
+                    weights: [400, 500, 600],
                     optimizedFallbacks: false,
                 }),
             ],

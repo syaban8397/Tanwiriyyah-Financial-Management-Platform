@@ -11,9 +11,30 @@
         th { font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
         td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
         tfoot td { font-weight: bold; border-top: 1px solid #1b1914; }
+        .letterhead { width: 100%; margin-bottom: 14px; border-bottom: 1px solid #c4a36a; padding-bottom: 8px; }
+        .letterhead td { border: 0; vertical-align: middle; padding: 0; }
+        .letterhead strong { font-size: 13px; letter-spacing: 0.08em; }
+        .letterhead .place { color: #5c564c; font-size: 10px; }
     </style>
 </head>
 <body>
+    @php
+        $logoFile = public_path('brand/tanwiriyyah-logo.jpg');
+        $logo = is_file($logoFile) ? 'data:image/jpeg;base64,'.base64_encode((string) file_get_contents($logoFile)) : null;
+    @endphp
+    <table class="letterhead">
+        <tr>
+            <td style="width: 58px;">
+                @if ($logo)
+                    <img src="{{ $logo }}" alt="" width="48" height="48">
+                @endif
+            </td>
+            <td>
+                <strong>YAYASAN TANWIRIYYAH</strong>
+                <div class="place">Sindanglaka, Karangtengah, Cianjur</div>
+            </td>
+        </tr>
+    </table>
     <h1>{{ $report['title'] }}</h1>
     <p>Yayasan Tanwiriyyah{{ $report['period'] ? ' · '.$report['period'] : '' }}</p>
     <table>

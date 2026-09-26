@@ -11,12 +11,12 @@ export default function Index({ accounts }: { accounts: { id: number; bank_name:
 
     return (
         <AppShell title="Bank">
-            <PageHeader kicker="Kas & bank" title="Rekening bank" lede="Nomor rekening disimpan terenkripsi. Daftar menampilkan empat digit terakhir." />
+            <PageHeader kicker="Kas & bank" title="Rekening bank" lede="Nomor rekening ditampilkan utuh bagi pengguna yang berwenang atas unit itu." />
             <table className="data">
                 <thead><tr><th>Unit</th><th>Bank</th><th>Nomor</th><th className="right">Awal</th><th className="right">Saldo</th></tr></thead>
                 <tbody>
                     {accounts.map((account) => (
-                        <tr key={account.id}><td>{account.unit}</td><td>{account.bank_name}</td><td className="num">{account.masked}</td><td className="right"><Money value={account.opening_balance} /></td><td className="right"><Money value={account.balance} /></td></tr>
+                        <tr key={account.id}><td>{account.unit}</td><td>{account.bank_name}</td><td className="num">{account.number}</td><td className="right"><Money value={account.opening_balance} /></td><td className="right"><Money value={account.balance} /></td></tr>
                     ))}
                 </tbody>
             </table>

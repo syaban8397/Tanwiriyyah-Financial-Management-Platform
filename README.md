@@ -129,7 +129,7 @@ Ekspor Excel dan PDF dijalankan oleh `GenerateReportJob`. Dengan `QUEUE_CONNECTI
 
 ## Akun demo
 
-Kata sandi semua akun: `Tanwiriyyah2026`
+Kata sandi semua akun: `password`
 
 | Email | Peran |
 | --- | --- |

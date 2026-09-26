@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ComponentType } from 'react';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} · Tanwiriyyah` : 'Tanwiriyyah'),
+    title: (title) => (title ? `${title} · Yayasan Tanwiriyyah` : 'Yayasan Tanwiriyyah'),
     resolve: (name) => {
         const pages = import.meta.glob('./Pages/**/*.tsx', { eager: true });
         const page = pages[`./Pages/${name}.tsx`] as { default: ComponentType } | undefined;

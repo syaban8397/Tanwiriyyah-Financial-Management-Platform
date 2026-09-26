@@ -12,12 +12,15 @@ export default function Http({ status }: { status: number }) {
     const message = copy[status] ?? copy[500];
 
     return (
-        <main className="login-main" style={{ minHeight: '100vh' }}>
-            <div>
-                <div className="page-kicker">{status}</div>
-                <h1 className="page-title">{message.title}</h1>
-                <p className="lede">{message.body}</p>
-                <Link className="btn btn-primary" href="/dashboard">Kembali ke dasbor</Link>
+        <main className="status-screen">
+            <div className="panel">
+                <div className="panel-b">
+                    <img className="status-logo" src="/brand/tanwiriyyah-logo.jpg" alt="Logo Yayasan Tanwiriyyah" />
+                    <div className="page-kicker">Yayasan Tanwiriyyah · {status}</div>
+                    <h1 className="page-title">{message.title}</h1>
+                    <p className="lede">{message.body}</p>
+                    <Link className="btn btn-primary" href="/dashboard">Kembali ke dasbor</Link>
+                </div>
             </div>
         </main>
     );

@@ -26,7 +26,7 @@ class BankAccountController extends Controller
                 'bank_name' => $account->bank_name,
                 'account_name' => $account->account_name,
                 'masked' => $account->masked_number,
-                'number' => $request->user()->canAccessUnit((int) $account->unit_id) ? $account->account_number : $account->masked_number,
+                'number' => $account->account_number,
                 'unit' => $account->unit?->code,
                 'unit_id' => $account->unit_id,
                 'opening_balance' => (int) $account->opening_balance,

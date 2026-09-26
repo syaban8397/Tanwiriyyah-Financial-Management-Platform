@@ -30,15 +30,14 @@ function delta(current: number, previous: number) {
 export default function Dashboard(props: Props) {
     return (
         <AppShell title="Dasbor">
-            <div className="statement">
-                <div className="statement-head">
-                    <div>
-                        <div className="page-kicker">Posisi keuangan</div>
-                        <h1 className="page-title">{props.period?.name ?? 'Belum ada periode'} · {props.scope}</h1>
-                    </div>
-                    <div className="help">{props.period?.status_label}{props.prior_period ? ` · pembanding ${props.prior_period}` : ''}</div>
+            <div className="page-head">
+                <div>
+                    <div className="page-kicker">Posisi keuangan</div>
+                    <h1 className="page-title">{props.period?.name ?? 'Belum ada periode'} · {props.scope}</h1>
                 </div>
-                <div className="figures">
+                <div className="help">{props.period?.status_label}{props.prior_period ? ` · pembanding ${props.prior_period}` : ''}</div>
+            </div>
+            <div className="figures figures-hero">
                     <div className="figure">
                         <div className="label">Pendapatan</div>
                         <Link className="value num" href={`/transactions?type=income`}><Money value={props.position.revenue} /></Link>
@@ -54,7 +53,6 @@ export default function Dashboard(props: Props) {
                         <div className="value num"><Money value={props.position.net} /></div>
                         <div className="delta">{props.position.net >= 0 ? 'Surplus periode' : 'Defisit periode'}</div>
                     </div>
-                </div>
             </div>
 
             <div className="layout-2">
@@ -65,7 +63,10 @@ export default function Dashboard(props: Props) {
                 <section className="panel">
                     <div className="panel-h"><h2>Kas dan bank</h2><span className="num"><Money value={props.cash + props.bank} /></span></div>
                     <div className="panel-b">
-                        <div className="help" style={{ marginBottom: 8 }}>Kas <Money value={props.cash} /> · Bank <Money value={props.bank} /></div>
+                        <div className="cash-split">
+                            <div><span>Kas</span><strong className="num"><Money value={props.cash} /></strong></div>
+                            <div><span>Bank</span><strong className="num"><Money value={props.bank} /></strong></div>
+                        </div>
                         {props.cash_accounts.slice(0, 4).map((account) => (
                             <div key={`c${account.id}`} className="compare"><span>{account.unit} kas</span><span>{account.name}</span><Money value={account.balance} /></div>
                         ))}
@@ -77,7 +78,7 @@ export default function Dashboard(props: Props) {
             </div>
 
             {props.units.length > 0 && (
-                <section className="panel" style={{ marginTop: 16 }}>
+                <section className="panel">
                     <div className="panel-h"><h2>Kinerja unit</h2><Link href="/reports?report=unit_performance">Laporan</Link></div>
                     <table className="data">
                         <thead><tr><th>Unit</th><th className="right">Pendapatan</th><th className="right">Beban</th><th className="right">Neto</th><th>Anggaran</th></tr></thead>

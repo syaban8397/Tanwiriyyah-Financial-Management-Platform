@@ -16,11 +16,10 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Services\UnitProvisioner;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class FinanceCatalogSeeder extends Seeder
 {
-    public const PASSWORD = 'Tanwiriyyah2026';
+    public const PASSWORD = 'password';
 
     public function run(): void
     {
@@ -214,31 +213,36 @@ class FinanceCatalogSeeder extends Seeder
         Setting::query()->updateOrCreate(['key' => 'organization_name'], ['value' => ['text' => 'Yayasan Tanwiriyyah']]);
     }
 
+    /**
+     * Satu akun untuk tiap peran. Bendahara unit ada satu per unit karena peran yang sama dibatasi unit.
+     *
+     * @return list<array{role: string, role_name: string, name: string, email: string, unit: ?string, unit_code: ?string}>
+     */
+    public static function demoLogins(): array
+    {
+        return [
+            ['role' => 'Super Admin', 'role_name' => 'super_admin', 'name' => 'Super Admin', 'email' => 'admin@tanwiriyyah.test', 'unit' => null, 'unit_code' => null],
+            ['role' => 'Bendahara Yayasan', 'role_name' => 'bendahara_yayasan', 'name' => 'Bendahara Yayasan', 'email' => 'yayasan@tanwiriyyah.test', 'unit' => null, 'unit_code' => null],
+            ['role' => 'Bendahara Unit', 'role_name' => 'bendahara_unit', 'name' => 'Bendahara RA', 'email' => 'ra@tanwiriyyah.test', 'unit' => 'Raudhatul Athfal', 'unit_code' => 'RA'],
+            ['role' => 'Bendahara Unit', 'role_name' => 'bendahara_unit', 'name' => 'Bendahara MI', 'email' => 'mi@tanwiriyyah.test', 'unit' => 'Madrasah Ibtidaiyah', 'unit_code' => 'MI'],
+            ['role' => 'Bendahara Unit', 'role_name' => 'bendahara_unit', 'name' => 'Bendahara DTA', 'email' => 'dta@tanwiriyyah.test', 'unit' => 'Diniyah Takmiliyah', 'unit_code' => 'DTA'],
+            ['role' => 'Bendahara Unit', 'role_name' => 'bendahara_unit', 'name' => 'Bendahara MTs', 'email' => 'mts@tanwiriyyah.test', 'unit' => 'Madrasah Tsanawiyah', 'unit_code' => 'MTs'],
+            ['role' => 'Bendahara Unit', 'role_name' => 'bendahara_unit', 'name' => 'Bendahara MA', 'email' => 'ma@tanwiriyyah.test', 'unit' => 'Madrasah Aliyah', 'unit_code' => 'MA'],
+            ['role' => 'Bendahara Unit', 'role_name' => 'bendahara_unit', 'name' => 'Bendahara Pesantren', 'email' => 'pesantren@tanwiriyyah.test', 'unit' => 'Pondok Pesantren', 'unit_code' => 'PP'],
+            ['role' => 'Bendahara Unit', 'role_name' => 'bendahara_unit', 'name' => "Bendahara Majelis Ta'lim", 'email' => 'majelis@tanwiriyyah.test', 'unit' => "Majelis Ta'lim", 'unit_code' => 'MT'],
+            ['role' => 'Bendahara Unit', 'role_name' => 'bendahara_unit', 'name' => 'Bendahara BLKK', 'email' => 'blkk@tanwiriyyah.test', 'unit' => 'Balai Latihan Kerja', 'unit_code' => 'BLKK'],
+        ];
+    }
+
     private function users(): void
     {
-        $admin = $this->user('Super Admin', 'admin@tanwiriyyah.test', null);
-        $admin->roles()->sync(Role::query()->where('name', 'super_admin')->pluck('id'));
+        foreach (self::demoLogins() as $account) {
+            $unitId = $account['unit_code'] === null
+                ? null
+                : Unit::query()->where('code', $account['unit_code'])->firstOrFail()->id;
 
-        $yayasan = $this->user('Bendahara Yayasan', 'yayasan@tanwiriyyah.test', null);
-        $yayasan->roles()->sync(Role::query()->where('name', 'bendahara_yayasan')->pluck('id'));
-
-        $emails = [
-            'RA' => 'ra@tanwiriyyah.test',
-            'MI' => 'mi@tanwiriyyah.test',
-            'DTA' => 'dta@tanwiriyyah.test',
-            'MTs' => 'mts@tanwiriyyah.test',
-            'MA' => 'ma@tanwiriyyah.test',
-            'PP' => 'pesantren@tanwiriyyah.test',
-            'MT' => 'majelis@tanwiriyyah.test',
-            'BLKK' => 'blkk@tanwiriyyah.test',
-        ];
-
-        $roleId = Role::query()->where('name', 'bendahara_unit')->value('id');
-
-        foreach ($emails as $code => $email) {
-            $unit = Unit::query()->where('code', $code)->firstOrFail();
-            $user = $this->user('Bendahara '.$unit->short_name, $email, $unit->id);
-            $user->roles()->sync([$roleId]);
+            $user = $this->user($account['name'], $account['email'], $unitId);
+            $user->roles()->sync(Role::query()->where('name', $account['role_name'])->pluck('id'));
         }
     }
 
@@ -248,7 +252,7 @@ class FinanceCatalogSeeder extends Seeder
             ['email' => $email],
             [
                 'name' => $name,
-                'password' => Hash::make(self::PASSWORD),
+                'password' => self::PASSWORD,
                 'unit_id' => $unitId,
                 'is_active' => true,
                 'email_verified_at' => now(),

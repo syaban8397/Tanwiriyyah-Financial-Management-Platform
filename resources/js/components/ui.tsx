@@ -58,22 +58,64 @@ export function Field({ label, error, children }: { label: string; error?: strin
     );
 }
 
+function axisAmount(value: number): string {
+    const abs = Math.abs(value);
+    if (abs >= 1_000_000_000) return `${(value / 1_000_000_000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} M`;
+    if (abs >= 1_000_000) return `${(value / 1_000_000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} jt`;
+    if (abs >= 1_000) return `${Math.round(value / 1_000)} rb`;
+    return String(Math.round(value));
+}
+
 export function Trend({ rows }: { rows: { label: string; revenue: number; expense: number; net?: number }[] }) {
     const max = Math.max(1, ...rows.flatMap((row) => [row.revenue, row.expense]));
+    const width = 640;
+    const height = 280;
+    const padLeft = 56;
+    const padRight = 16;
+    const padTop = 18;
+    const padBottom = 36;
+    const innerWidth = width - padLeft - padRight;
+    const innerHeight = height - padTop - padBottom;
+    const base = padTop + innerHeight;
+    const ticks = [0, 0.5, 1];
+    const xAt = (index: number) => padLeft + (rows.length <= 1 ? innerWidth / 2 : (innerWidth * index) / (rows.length - 1));
+    const yAt = (value: number) => padTop + innerHeight - (value / max) * innerHeight;
+    const line = (key: 'revenue' | 'expense') => rows.map((row, index) => `${index === 0 ? 'M' : 'L'} ${xAt(index)} ${yAt(row[key])}`).join(' ');
+    const area = (key: 'revenue' | 'expense') => `${line(key)} L ${xAt(rows.length - 1)} ${base} L ${xAt(0)} ${base} Z`;
 
     return (
-        <div className="bars" aria-label="Pendapatan dibanding beban">
-            {rows.map((row) => (
-                <div key={row.label} className="bar-row">
-                    <span>{row.label.replace(' 2026', '')}</span>
-                    <div className="track" title={`Pendapatan ${formatRupiah(row.revenue)}, beban ${formatRupiah(row.expense)}`}>
-                        <span className="in" style={{ width: `${(row.revenue / max) * 100}%` }} />
-                        <span className="out" style={{ width: `${(row.expense / max) * 100}%`, opacity: 0.85 }} />
-                    </div>
-                    <span className="num right">{formatRupiah(row.net ?? row.revenue - row.expense)}</span>
-                </div>
-            ))}
-            <div className="help">Garis hijau pendapatan. Garis pasir beban. Angka kanan adalah neto.</div>
+        <div className="chart" aria-label="Pendapatan dibanding beban">
+            <div className="chart-legend">
+                <span><i className="in" /> Pendapatan</span>
+                <span><i className="out" /> Beban</span>
+            </div>
+            <svg className="chart-svg" viewBox={`0 0 ${width} ${height}`} role="img">
+                {ticks.map((tick) => {
+                    const y = padTop + innerHeight - tick * innerHeight;
+                    return (
+                        <g key={tick}>
+                            <line className="grid" x1={padLeft} x2={width - padRight} y1={y} y2={y} />
+                            <text className="axis" x={padLeft - 8} y={y + 4} textAnchor="end">{axisAmount(max * tick)}</text>
+                        </g>
+                    );
+                })}
+                {rows.length > 0 && (
+                    <>
+                        <path className="area-in" d={area('revenue')} />
+                        <path className="area-out" d={area('expense')} />
+                        <path className="line-in" d={line('revenue')} />
+                        <path className="line-out" d={line('expense')} />
+                    </>
+                )}
+                {rows.map((row, index) => (
+                    <g key={row.label}>
+                        <title>{`${row.label}: pendapatan ${formatRupiah(row.revenue)}, beban ${formatRupiah(row.expense)}`}</title>
+                        <circle className="dot-in" cx={xAt(index)} cy={yAt(row.revenue)} r="4.5" />
+                        <circle className="dot-out" cx={xAt(index)} cy={yAt(row.expense)} r="4.5" />
+                        <text className="axis month" x={xAt(index)} y={height - 12} textAnchor="middle">{row.label.replace(' 2026', '')}</text>
+                    </g>
+                ))}
+            </svg>
         </div>
     );
 }

@@ -56,7 +56,6 @@ class Navigation
                     self::item($user, 'REPORT_VIEW', 'Laporan', '/reports'),
                     self::item($user, 'FINANCE_VIEW', 'Dokumen', '/documents'),
                     self::item($user, 'FINANCE_VIEW', 'Tanya buku', '/inquiry'),
-                    ['label' => 'Notifikasi', 'href' => '/notifications', 'badge' => $user->unreadNotifications()->count()],
                     self::item($user, 'AUDIT_VIEW', 'Jejak audit', '/audit'),
                     $user->hasAnyPermission(['PERIOD_OPEN', 'PERIOD_CLOSE', 'FINANCE_VIEW'])
                         ? ['label' => 'Periode', 'href' => '/periods']
