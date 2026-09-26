@@ -2,13 +2,16 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laravel/laravel",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Tanwiriyyah Financial Management Platform",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "inertiajs/inertia-laravel": "^3.4",
         "laravel/framework": "^13.17",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "openspout/openspout": "^5.12"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
